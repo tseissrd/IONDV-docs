@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: IONDV rest module \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-12-27 17:48+1000\n"
+"POT-Creation-Date: 2019-12-27 18:23+1000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,10 +31,17 @@ msgid ""
 "implement arbitrary custom web interfaces (including SPA created on the "
 "frameworks Angular, Redux, Vue, etc.)."
 msgstr ""
+"REST - модуль IONDV. Framework применяется для быстрого создания "
+"веб-сервисов на основе метаданных для реализации микросервисной "
+"архитектуры. Модуль позволяет также интегрировать приложения созданные на"
+" фреймворке с другими системами по REST API и обеспечивает обмен данными "
+"для реализации произвольных пользовательских веб-интерфейсов (в том числе"
+" SPA созданные на фреймворках Angular, Redux, Vue и т.д.) или для бакенд "
+"части мобильных приложений."
 
 #: ../../README.md:9
 msgid "IONDV. Framework in brief"
-msgstr ""
+msgstr "Кратко об IONDV. Framework"
 
 #: ../../README.md:11
 msgid ""
@@ -46,18 +53,25 @@ msgid ""
 "applications expanding its functionality, visual development environment "
 "Studio to create metadata for the app."
 msgstr ""
+"IONDV. Framework - это опенсорный фреймворк на node.js для разработки "
+"учетных приложений или микросервисов на основе метаданных и отдельных "
+"модулей. Он является частью инструментальной цифровой платформы для "
+"создания enterprise (ERP) приложений состоящей из опенсорсных "
+"компонентов: самого фреймворка, модулей и готовых приложений расширяющих "
+"его функциональность, визуальной среды Studio для разработки метаданных "
+"приложений."
 
 #: ../../README.md:18
 msgid "For more details, see IONDV. Framework site."
-msgstr ""
+msgstr "Подробнее об IONDV. Framework на сайте."
 
 #: ../../README.md:20
 msgid "Documentation is available in the Github repository."
-msgstr ""
+msgstr "Документация доступна в репозитории на github."
 
 #: ../../README.md:22
 msgid "Description"
-msgstr ""
+msgstr "Описание и назначение модуля"
 
 #: ../../README.md:24
 msgid ""
@@ -66,6 +80,10 @@ msgid ""
 "standard CRUD functions, it also connects the application's own services,"
 " including those using the core API."
 msgstr ""
+"IONDV. REST - модуль обеспечивающий работу с данными приложения IONDV "
+"через REST API. Является оберткой для работы с данными через стандартные "
+"функции CRUD или подключает собственные сервисы приложения, в том числе "
+"использующие API ядра."
 
 #: ../../README.md:28
 msgid "Functionality"
@@ -77,23 +95,23 @@ msgstr ""
 
 #: ../../README.md:32 ../../README.md:38
 msgid "Service registration in application configuration"
-msgstr ""
+msgstr "Регистрация сервиса в конфигруации приложения"
 
 #: ../../README.md:33
 msgid "Authorization for service requests"
-msgstr ""
+msgstr "Авторизация при запросах к сервисам"
 
 #: ../../README.md:34 ../../README.md:200
 msgid "Built-in module services"
-msgstr ""
+msgstr "Встроенные сервисы модуля"
 
 #: ../../README.md:35
 msgid "Service handler in the app"
-msgstr ""
+msgstr "Реализация обработчика сервиса в приложении"
 
 #: ../../README.md:36 ../../README.md:666
 msgid "Additional services"
-msgstr ""
+msgstr "Дополнительные сервисы модуля"
 
 #: ../../README.md:40
 msgid ""
@@ -101,6 +119,9 @@ msgid ""
 "settings of the rest module in the deploy.json file of the application. "
 "For example:"
 msgstr ""
+"Для подключения сервисов в приложении их необходимо сконфигурировать в "
+"глобальных настройках модуля rest в файле deploy.json приложения. Пример "
+"приведен ниже."
 
 #: ../../README.md:67
 msgid ""
@@ -114,6 +135,14 @@ msgid ""
 "be both in the application and in any module or framework, including "
 "sample rest module handlers."
 msgstr ""
+"Путь к регистрациям сервиса в файле deploy.json - "
+"modules.rest.globals.di, далее указывается название сервиса, которое "
+"будет доступно по адресу https://domain.com/rest/serviceName, где "
+"serviceName - имя сервиса, указываемого в di, например в примере выше "
+"simple или string-list. В атрибуте module указывается путь к js-файлу с "
+"обработчиком сервиса с путем относительно корня фреймворка. Обработчик "
+"может быть как в приложении, так и в любом модуле или фреймворке, в т.ч. "
+"типовые обработчики модуля rest."
 
 #: ../../README.md:70
 msgid "In the options property, the specific service parameters are set."
