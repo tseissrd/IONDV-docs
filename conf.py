@@ -41,7 +41,8 @@ release = u''
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
-    'recommonmark'
+    'recommonmark',
+    'sphinx_js'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -65,7 +66,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'ru'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -74,6 +75,8 @@ exclude_patterns = [u'_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
+
+primary_domain = 'js'
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -182,3 +185,9 @@ epub_exclude_files = ['search.html']
 locale_dirs = ['./locales/']
 
 # -- Extension configuration -------------------------------------------------
+root_for_relative_js_paths = '../dnt-gitlab/modules/rest'
+js_source_path = [
+    '../dnt-gitlab/modules/rest/lib/impl',
+    '../dnt-gitlab/modules/rest/lib/interfaces',
+    '../dnt-gitlab/modules/rest/backend'
+]

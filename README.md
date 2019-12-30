@@ -1,43 +1,38 @@
 # IONDV. REST
 
-REST - is an **IONDV. Framework** module used to quickly create web services
-based on metadata for implementing microservice architecture. The module also allows you to
-integrate applications created on the framework with other systems using the REST API and it
-provides data exchange to implement arbitrary custom web interfaces
-(including [SPA](https://en.wikipedia.org/wiki/Single-page_application) created on the frameworks [Angular](https://angularjs.org), [Redux](https://redux.js.org), [Vue](https://ru.vuejs.org), etc.).
+REST - модуль IONDV. Framework применяется для быстрого создания веб-сервисов на 
+основе метаданных для реализации микросервисной архитектуры. Модуль позволяет также 
+интегрировать приложения созданные на фреймворке с другими системами по REST API и 
+обеспечивает обмен данными для реализации произвольных пользовательских веб-интерфейсов 
+(в том числе SPA созданные на фреймворках Angular, Redux, Vue и т.д.) или для бакенд части мобильных приложений.
 
-### IONDV. Framework in brief
+### Кратко об IONDV. Framework
+IONDV. Framework - это опенсорный фреймворк на node.js для разработки учетных приложений 
+или микросервисов на основе метаданных и отдельных модулей. Он является частью 
+инструментальной цифровой платформы для создания enterprise 
+(ERP) приложений состоящей из опенсорсных компонентов: самого [фреймворка](https://github.com/iondv/framework), 
+[модулей](https://github.com/topics/iondv-module) и готовых приложений расширяющих его 
+функциональность, визуальной среды [Studio](https://github.com/iondv/studio) для 
+разработки метаданных приложений.
 
-**IONDV. Framework** - is a node.js open source framework for developing accounting applications
-or microservices based on metadata and individual modules. Framework is a part of 
-instrumental digital platform to create enterprise 
-(ERP) apps. This platform consists of the following open-source components: the [IONDV. Framework](https://github.com/iondv/framework), the
-[modules](https://github.com/topics/iondv-module) and ready-made applications expanding its
-functionality, visual development environment [Studio](https://github.com/iondv/studio) to create metadata for the app.
+Подробнее об [IONDV. Framework на сайте](https://iondv.com), документация доступна в [репозитории на github](https://github.com/iondv/framework/blob/master/docs/en/index.md)
 
-* For more details, see [IONDV. Framework site](https://iondv.com). 
+## Описание и назначение модуля
 
-* Documentation is available in the [Github repository](https://github.com/iondv/framework/blob/master/docs/en/index.md).
+**IONDV. REST** - модуль обеспечивающий работу с данными приложения IONDV через `REST API`. 
+Является оберткой для работы с данными через стандартные функции CRUD или подключает собственные 
+сервисы приложения, в том числе использующие API ядра.
 
-## Description
+Дополнительно:
+* [Регистрация сервиса в конфигруации приложения](#регистрация-сервиса-в-конфигурации-приложения)
+* [Авторизация при запросах к сервисам](#авторизация-при-запросах-к-сервисам)
+* [Встроенные сервисы модуля](#встроенные-сервисы-модуля)
+* [Реализация обработчика сервиса в приложении](#реализация-обработчика-сервиса-в-приложении)
+* [Дополнительные сервисы модуля](#дополнительные-сервисы)
 
-**IONDV. REST** - is module providing a way to work with the data of IONDV applications via `REST API`.
-It's a wrapper to work with the data via standard CRUD functions, it also connects the
-application's own services, including those using the core API.
-
-## Functionality
-
-Overview:
-
-* [Service registration in application configuration](#service-registration-in-application-configuration)
-* [Authorization for service requests](#authorization-for-service-requests)
-* [Built-in module services](#built-in-module-services)
-* [Service handler in the app](#service-handler-in-the-app)
-* [Additional services](#additional-services)
-
-### Service registration in application configuration 
-
-To connect services in the application, configure them in the global settings of the rest module in the deploy.json file of the application. For example:
+### Регистрация сервиса в конфигурации приложения 
+Для подключения сервисов в приложении их необходимо сконфигурировать в глобальных настройках модуля rest в файле 
+deploy.json приложения. Пример приведен ниже.
 
 ```json
 {
@@ -64,60 +59,46 @@ To connect services in the application, configure them in the global settings of
           }
 ```
 
-The path to the service registration is in the `deploy.json` file - `modules.rest.globals.di`, further specify the name of the service, which will be available at the following address `https://domain.com/rest/serviceName`, where `serviceName` - name of the service, set in the di, as in the example above `simple` or `string-list`. In the `module` attribute, specify the path to the js-file with a service handler with a relative path
-the root of the framework. The handler can be both in the application and in any module or framework, including sample rest module handlers.
+Путь к регистрациям сервиса в файле `deploy.json` - `modules.rest.globals.di`, далее указывается название сервиса, которое
+будет доступно по адресу `https://domain.com/rest/serviceName`, где serviceName - имя сервиса, указываемого в di, например
+в примере выше `simple` или `string-list`. В атрибуте `module` указывается путь к js-файлу с обработчиком сервиса с путем относительно
+корня фреймворка. Обработчик может быть как в приложении, так и в любом модуле или фреймворке, в т.ч. типовые обработчики модуля rest.
 
-In the `options` property, the specific service parameters are set.
-
-For example, for **crud** service:
-
-* `dataRepo` filed - data repository with access control used for operations on objects
-* `auth` field - authentication component used to obtain the current user account.
-
-For **string-list** service:
-
-used for data sampling
-
-* `dataRepo` field - data repository, used for data sampling
-* `stringClassName` field - class name of received objects
-
-In this case, the `class_string@develop-and-test` class will be transferred to the `getList` method of the data repository.
-
+В параметре `options` указываются специфические настройки сервиса.
+Например, для сервиса **crud** указаны:
+* в поле `dataRepo` - репозиторий данных с контролем доступа, используемый для операций над обьектами 
+* в поле `auth`- компонент аутентификации, используемый для получения текущей учетной записи пользователя.
+А для сервиса **string-list** указаны:
+* в поле `dataRepo` - репозиторий данных, используемый для выборки данных
+* в поле `stringClassName` - имя класса получаемых обьектов
+в данном случае класс `class_string@develop-and-test` будет передан в метод `getList` репозитория данных
 ```javascript
-
 options.dataRepo.getList(options.stringClassName, {})
+````
 
-```
+### Аунтентификация при запросах к сервисам
+Авторизация может осуществляться следующими способами.
 
-### Authentication for service queries
-
-There are several ways to carry out the authorization:
-
-#### Standart authorization services via the login account  
-
-All services use the standard authorization mechanism by default, which implies the transfer of 	registration details in the header:
-
-* authorization via basicAuth, for example:
-
+#### Сервисы со стандартрным механизмом авторизации по учетной записи
+Все сервисы по умолчанию используют стандартный механизм авторизации, подразумевающий передачу учетных данных в заголовке:
+* путем авторизации через basicAuth, пример 
 ```bash
 curl -u demo@local:ion-demo https://dnt.iondv.com/rest/simple
 ```
-
-* transfer of	registration details in the query header:
+* путем передачи учетных данных в заголовках запроса
 ```bash
 curl -H "auth-user: demo" -H "auth-pwd: ion-demo" -H "auth-user-type: local" https://dnt.iondv.com/rest/simple
 ```
 
-or
+или
 
 ```bash
 curl -H "auth-user: demo@local" -H "auth-pwd: ion-demo" https://dnt.iondv.com/rest/simple
 ```
 
 
-#### No authentication services
-
-To implement the service without authentication, you must set the `none` parameter in the `deploy.json` file:
+#### Сервисы без аутентификации
+Для реализации работы сервиса без аутентификации, необходимо задать для него значение `none` в настройке `authMode` в `deploy.json`
 
 ```json
 {
@@ -128,14 +109,13 @@ To implement the service without authentication, you must set the `none` paramet
           "echo": "none"
 ```
 
-A query to a service will not require authentication, an example query - `curl https://dnt.iondv.com/rest/echoo`
+Запрос к сервису не будет требовать аутентификации, пример запроса `curl https://dnt.iondv.com/rest/echoo`
 
-#### Services with token authentication
+#### Сервисы с аутентификацией через токен
+Аутентификация по токену используется для исключения постоянной передачи учетной записи в запросах.
+Токены ограничены по времени жизни.
 
-Token authentication is used to exclude the constant transfer of an account in queries. Tokens are limited in their lifetime.
-
-To implement the work of the service with authentication through a token, you must set the `token` parameter in the `authMode` in the `deploy.json` file:
-
+Для реализации работы сервиса с аутентификацией через токен, необходимо задать для него значение `token` в настройке `authMode` в `deploy.json`
 ```json
 {
   "modules": {
@@ -145,71 +125,67 @@ To implement the work of the service with authentication through a token, you mu
           "echo-token": "token"
 ```
 
-Authentication through the token is carried out by sending the token value for the `auth-token` parameter in the request header:
-
+Аутентификация через токен осуществляется путем отправки значения токена в заголовке запроса `auth-token`  
 ```bash
 curl -H "auth-token: c369a361db9742e9a9ae8e9fe55950a571493812" http://dnt.iondv.com/rest/echo-token
 ```
 
-You can get a token in two ways: in the console of the ionadmin module or through the `token` service of the rest module.
+Получение токена возможно двумя способами: в консоли модуля ionadmin или через сервис `token` модуля rest.
 
-All generated tokens are stored in the collection `ion_user_tokens` in the database.
+Все сгенерированные токены хранятся в коллекции `ion_user_tokens` в базе данных приложения
 
-##### Getting a constant token through the ionadmin module
+##### Получение постоянного токена через модуль ionadmin 
+Для получения токена через консоль администратора перейдите в пункт навигации "Ключи безопасности веб-сервисов" 
+модуля ionadmin, например перейдя по адресу `locahost:8888/ionadmin/token`
 
-To get a token through the admin console, go to the "Web Services Security Keys" navigation item of the ionadmin module, by going to `locahost:8888/ionadmin/token`.
+На странице "Генератор токенов безопасности":
+* Введите имя пользоватля в поле "Имя пользователя"
+* Укажите в поле "Тип учетной записи" значение "local"
+* Нажмите кнопку "Сгенерировать токен"
+* В поле "Токен" появится значение токена подобное `3a546090355317c287886c0e81dfd304fa5bda99`, его и нужно использовать 
+как значение заголовка `auth-token`.
 
-On the "Security Token Generator" page:
+Время жизни токена созданного по умолчанию 100 лет.
 
-* Enter the user name in the "User name" field
-* Set the "Account Type" field to "local"
-* Click the "Generate token" button
-* In the "Token" field the token value as follows `3a546090355317c287886c0e81dfd304fa5bda99` will appear. Use it as the `auth-token` header value.
-
-The default token lifetime is 100 years.
-
-##### Getting a temporary token through the rest/token service
-
-The second way to get the token is to use the web service of the rest module - `token`. You can get a token through
-authenticated request to the `rest/token` address. For example, through the authorization basicAuth type:
-
+##### Получение временного токена через сервис rest/token
+Вторым способом получения токена является использование веб-сервиса модуля rest - `token`. Получить токен можно через 
+аутентифицированный запрос на адрес `rest/token`. Например через авторизацию типа basicAuth:
 ```bash
 curl -u demo@local:ion-demo https://dnt.iondv.com/rest/token
 ```
-or a request with authorization through the parameters in the header:
-
+или запрос с авторизацией через параметры в заголовке:
 ```bash
 curl -H "auth-user: demo@local" -H "auth-pwd: ion-demo" -H https://dnt.iondv.com/rest/token
 ```
 
-The service response will have a token of the form `e444c69894d2087696e0a6c6914788f67ebcf6ee`. The default token lifetime is 100 years.
+В ответе сервиса будет токен вида `e444c69894d2087696e0a6c6914788f67ebcf6ee`. Время жизни токена по умолчанию 100 лет.
 
-To execute the request, you must either have administrator rights in the system or have `use` rights for the `ws:::gen-ws-token` resource.
+Для выполнения запроса нужно или обладать администраторскими правами в системе или иметь права `use` для ресурса `ws:::gen-ws-token`
 
-You can add a token generation resource for a role from the command line `node bin/acl.js --role restGrp --p USE --res ws:::gen-ws-token` (where restGrp - name of existing group)
+Добавить ресурс возможности генерации токенов для роли, можно из комадной строки `node bin/acl.js --role restGrp --p USE --res ws:::gen-ws-token`
+(где restGrp название существующей группы)
  
-The second way to add rights to a resource is to use the admin console of the ionadmin module, for example, by going to `locahost:8888/ionadmin/`:
+Вторым способом добавления прав на ресурс - использование консоли администратора модуля ionadmin, например, перейдя по
+ адресу `locahost:8888/ionadmin/`:
+* Выберите пункт навигации "Безопасность", 
+* Выберите подпункт навигации "Роли"
+* Выберите существующую роль и нажмите кнопку редактировать или создать новую роль. 
+* В поле "Права доступа" роли выберите вкладку "Services"
+* Раскройте список прав для ресурса "Генерация токенов безопасности посредством веб-сервисов (ws:::gen-ws-token)"
+* Выбрать пункт "Использование" и нажмите кнопку "Сохранить"
 
-* Select the "Security" navigation item,
-* Select the Roles navigation subitem,
-* Select an existing role and click the edit or create a new role buttons, 
-* In the "Access righrs" field, select the Services item,
-* Expand the list of rights for the "Generation of security tokens through web services (ws ::: gen-ws-token)" resource,
-* Select "Use" and click "Save".
+### Встроенные сервисы модуля
 
-### Built-in module services
+Модуль REST имеет несколько встроенных сервисов предназначенных для реализации типовых операций с модулем:
+* `acceptor` - сервис обеспечивает массовое создание объектов
+* `token` - сервис обеспечивает выдачу токена для авторизованного пользователя
+* `crud` - сервис CRUD для объектов системы
 
-The REST module has several built-in services designed to implement typical operations with the module:
+#### Встроенный сервис "acceptor"
+Сервис `acceptor` предназначен для массового сохранения объектов разных классов. 
 
-* `acceptor` - service provides mass creation of objects
-* `token` -  service provides the issuance of a token for an authorized user
-* `crud` - CRUD service for system objects
-
-#### Built-in "acceptor" service
-
-The `acceptor` service designed for mass storage of objects of different classes.
-
-It is required to register the service in the deploy.json application configuration file to work with the service. At the same time, the service must be indicated in the `options` - the `dataRepo` and `metaRepo` repositories. For example:
+Для работы с сервисом требуется его регистрация в файле конфигураций приложений deploy.json. При этом для сервиса 
+обязательно должны быть указаны в `options` репозитории `dataRepo` и `metaRepo`. Например
 
 ```json
 {
@@ -226,21 +202,21 @@ It is required to register the service in the deploy.json application configurat
           }
 ```
 
-Authorization is carried out through all the main types of access, and by default through the user account.
+Авторизация осуществляется через все основные типы доступа, а по умолчанию через учетную запись пользователя.
 
-The service is carried out by the `POST` method, objects are transferred as an array of objects in JSON format in the request body with the json content header `Content-Type:application/json`. Auto-generated fields are optional.
+Сервис работает по методу `POST`, объекты передаются в виде массива объектов в формате JSON в теле запроса с обязательным 
+указанием в заголовке содержания json `Content-Type:application/json`. Автосоздаваемые поля указывать не обязательно. 
 
-In the header in the `ion-converter` property, the name of the converter that can be used when processing data can be passed.
-Both request data and response data. In this case, the data converter itself must be registered in the `options` service.
-If no handler is specified, the default handler is used.
+В заголовке (header) в свойстве `ion-converter` может быть передано имя конвертора, который нужно использовать при обработке данных.
+Как данных запроса, так и данных ответа. При этом сам конвертор данных должные быть зарегистрирован в `options` сервиса.
+Если обработчик не указан, используется обработчик по умолчанию.
 
-The object data must include:
+В данных объекта обязательно указываются:
+* `_id` - идентификатор объекта по ключевому полю
+* `_class` - класс объекта с неймспейсом
+* `_classVer` - версия класса
 
-* `_id` - identifier of the object by key field
-* `_class` - object class with namespace
-* `_classVer` - class version
-
-The remaining values must match the properties of the class, including data type matching. Example.
+Остальные значения должны соответствовать свойствам класса, включая соответствие типов данных. Пример.
 
 ```bash
 curl -X POST -u demo@local:ion-demo \
@@ -250,8 +226,7 @@ curl -X POST -u demo@local:ion-demo \
    https://dnt.iondv.com/rest/acceptor
 ```
 
-The method returns the code `200` and an array of stored objects.
-
+Метод возвращает код `200` и массив сохраненных объектов.
 ```json
 [
   {
@@ -266,8 +241,7 @@ The method returns the code `200` and an array of stored objects.
 ]
 ```
 
-In case of an error, the response code will be `400`, and the response text will contain
-
+В случае ошибки код ответа будет `400`, а текст ответа содержать 
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -281,31 +255,31 @@ In case of an error, the response code will be `400`, and the response text will
 </html>
 ```
 
-#### Built-in service "token"
+#### Встроенный сервис "token"
+Сервис `token` предназначен для выдачи токена пользователю, прошедшему аутентификацию, для его дальнейшего использования в сервисах 
+осуществляющих аутентификацию по токену.
 
-The `token` service is intended for issuing a token to an authenticated user, for its further use in token authentication services.
+Сервис не требует регистрации в deploy.json. Сервис обеспечивает выдачу токена для авторизованного пользователя, 
+если он имеет права `use` для ресурса `ws:::gen-ws-token`  или имеет права администратора. В ответ на запрос, возвращается 
+токен вида `e444c69894d2087696e0a6c6914788f67ebcf6ee`. Время жизни токена по умолчанию 100 лет.
 
-The service does not require registration in deploy.json. The service provides the issuance of a token for an authorized user, 
-if he has the `use` rights for the `ws:::gen-ws-token` resource or has administrator rights. In response to the request, there is a token of the following type `e444c69894d2087696e0a6c6914788f67ebcf6ee`. The default token lifetime is 100 years.
-
-Request example via authentication of the basicAuth type:
-
+Пример запроса через аутентификацию типа basicAuth 
 ```bash
 curl -u demo@local:ion-demo https://dnt.iondv.com/rest/token
 ```
  
-Example request with authentication through parameters in the header
-
+Пример запроса  с аутентификацией через параметры в заголовке 
 ```bash
 curl -H "auth-user: demo@local" -H "auth-pwd: ion-demo" -H "auth-user-type: local" https://dnt.iondv.com/rest/token
 ```
 
-#### Built-in service "crud"
+#### Встроенный сервис "crud"
+Сервис `crud` реализует REST API по модели основных операций CRUD (create, read, update, delete).
 
-The `crud` service implements a REST API based on the basic CRUD operations (create, read, update, delete).
-
-The service requires registration in deploy.json of the application and requires a mandatory data source `dataRepo` in `options` of the service, as well as the authorization source `auth` to access user data.
-It is advisable to specify as a data repository - a repository with full security processing in order to test the access to objects taking into account dynamic security. For example:
+Сервис требует регистрации в deploy.json приложения и требует обязательного указания источника данных `dataRepo` в `options` 
+сервиса, а также источника авторизации `auth` для доступа к данным пользователя.
+Целесооразно указывать в качестве репозитория данных - репозиторий с полной обработкой безопасности, чтобы отрабатывать 
+доступ к объектам с учетом динамической безопаности. Например
 
 ```json
 {
@@ -322,16 +296,14 @@ It is advisable to specify as a data repository - a repository with full securit
           }
 ```
 
-Authentication is done through all the main types of access, and by default through a user account.
+Аутентификация осуществляется через все основные типы доступа, а по умолчанию через учетную запись пользователя.
 
-Example:
-
+Пример
 ```bash
 curl -X POST -u demo@local:ion-demo https://dnt.iondv.com/rest/crud
 ```
 
-By default, without the correct parameters - server response code about the error is `404`. 
-
+По умолчанию, без правильных параметров - код ответа сервера `404` об ошибке
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -345,14 +317,12 @@ By default, without the correct parameters - server response code about the erro
 </html>
 ```
 
-##### Getting a list of objects: GET crud/:class@namespace method
-
-Getting a list of objects is carried out by the `GET` method, while indicating the class code with a namespace, for example `rest/crud/class_string@develop-and-test/`
-
+##### Получение списка объектов: метод GET crud/:class@namespace
+Запрос списка объектов осуществляется методом `GET`, при этом указывается код класса и нейспейс, например `rest/crud/class_string@develop-and-test/`
 ```bash
 curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@develop-and-test/
 ```
-In response, the service returns a JSON Object with an offset of 0 and a count of 5 records and a status of `200`, if there is no such class, returns the code `404`.
+В ответсервис выдает JSON Объект со смещением 0 и кол-вом 5ть записей и статусом `200`, если такого класса нет возвращает код `404`.
 
 ```json
 [{"_creator":"admin@local",
@@ -374,15 +344,14 @@ In response, the service returns a JSON Object with an offset of 0 and a count o
 "string_formattext":"Example of the \r\n \"String [0]\" type \r\n in the \r\nFormatted text [7] view"}]
 ```
 
-The query can be implemented with the following query parameters:
+Запрос может быть осуществлен со следущими query параметрами:
+* `_offset` - смещение выборки, по умолчанию 0
+* `_count` - кол-во значение в выборке, по умолчанию 5
+* `_eager` - список свойств класса, разделенных символом `|` для которых необходимо осуществить жадную загрузку данных.
+* `[name of property]` - все параметры воспринимаютсяимя запроса, кроме начинающихся на `_` считаются именами атрибутов класса, 
+а их значения задаются в качестве фильтров. 
 
-* `_offset` - sample offset, 0 - by default
-* `_count` - number of values in the sample, 5 - by default
-* `_eager` - a list of class properties, separated by the symbol `|` for which it is necessary to configure the data eager loading.
-* `[name of property]` - all parameters are accepted by the request name, except those starting with `_` which are considered the names of the class attributes, and their values are set as filters.
-
-Examples:
-
+Примеры:
 ```bash
 # Запрос списка объектов класса со смещением 1 и кол-вом 2
 curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@develop-and-test/?_offset=1&_count=2
@@ -392,32 +361,32 @@ curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@
 curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@develop-and-test/?string_text=example1&_offset=1&_count=2
 ```
 
-##### Check of the object availability: HEAD crud/:class@namespace/:id method
-
-Check of the object availability is carried out by the `GET` method, while indicating the class code with a namespace and the value of the object key, for example `rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b`
+##### Проверка наличия объекта: метод HEAD crud/:class@namespace/:id
+Проверка наличия объекта осуществляется методом `HEAD`, при этом указывается код класса с нейспейсом и значение ключа объекта, 
+например `rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b`
 
 ```bash
 curl -X HEAD -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b
 ```
 
-If the object exists, it returns the response code `200`, if the object does not find the code is `404`, if there is no correct rights - `403`.
+Если объект существует - возвращает код ответа `200`, если объект не найден `404`, если нет прав `403`.
 
-##### Receiving object: GET crud/:class@namespace/:id method
-
-Obtaining an object is carried out by the `GET` method, while indicating the class code with a namespace and the value of the object key, for example `rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b`
+##### Получение объекта: метод GET crud/:class@namespace/:id
+Получение объекта осуществляется методом `GET`, при этом указывается код класса с нейспейсом и значение ключа объекта, 
+например `rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b`
 
 ```bash
 curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b
 ```
 
-In addition, you can set the `_eager` parameter in the query containing a list of class properties, separated by the `|` symbol
-for which it is necessary to configure the data eager loading (links or collections). For example:
+При этом дополнительно в query может быть задан параметр `_eager` содержащий список свойств класса, разделенных символом `|` 
+для которых необходимо осуществить жадную загрузку данных (ссылки или коллекции). Например
 
 ```bash
 curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b?_eager=string_text
 ```
 
-If the object exists, it returns the response code `200` and the object itself in json format, if the object does not find the code is `404`, if there is no correct rights - `403`.
+Если объект существует - возвращает код ответа `200` и сам объект в формате json, если объект не найден `404`, если нет прав `403`.
 
 ```json
 {
@@ -432,9 +401,10 @@ If the object exists, it returns the response code `200` and the object itself i
 }
 ```
 
-##### Object creation: POST crud/:class@namespace method
-
-An object is created using the `POST` method, and the class code with a namespace is specified, `rest/crud/class_string@develop-and-test`. The object itself is transmitted in the request body in json format with obligatory indication in the header of the json content type `Content-Type:application/json`. Auto-generated fields are optional. Example:
+##### Создание объекта: метод POST crud/:class@namespace
+Создание объекта осуществляется методом `POST`, при этом указывается код класса с нейспейсом,
+например `rest/crud/class_string@develop-and-test`. Сам объект передается в теле запроса в формате json с обязательным 
+указанием в заголовке типа содержания json `Content-Type:application/json`. Автосоздаваемые поля указывать не обязательно. Пример
 
 ```bash
 curl -X POST -u demo@local:ion-demo \
@@ -443,8 +413,7 @@ curl -X POST -u demo@local:ion-demo \
    https://dnt.iondv.com/rest/crud/class_string@develop-and-test/
 ```
 
-The created object will be returned in response, in which all auto-created fields will be filled and the response code will be  `200`.
-
+В ответ будет возвращён созданный объект, в котором будут заполнены все автосозданные поля и указан код ответа `200`.
 ```json
 {
     "_creator": "admin@local",
@@ -459,8 +428,7 @@ The created object will be returned in response, in which all auto-created field
 }
 ```
 
-In case of an error, the response code will be `400`, and the response text will contain:
-
+В случае ошибки код ответа будет `400`, а текст ответа содержать 
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -474,23 +442,22 @@ In case of an error, the response code will be `400`, and the response text will
 </html>
 ```
 
-##### Object update: PATCH or PUT crud/:class@namespace/:id method
+##### Обновление объекта: метод PATCH или PUT crud/:class@namespace/:id
+Обновления объекта осуществляется методом `PATCH` или `PUT`, при этом указывается код класса с нейспейсом и значение ключа объекта, 
+например `rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b`. Сам объект передается в теле
+ запроса в формате json с обязательным указанием в заголовке типа содержания json `Content-Type:application/json`. 
 
-Updating an object is done using the `PATCH` or` PUT` method, and the class code with neispace and the value of the object key are indicated, for example `rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b`. The object itself is transmitted in the request body in json format with obligatory indication in the header of the json content type - `Content-Type:application/json`. 
-
-Example:
-
+Пример
 ```bash
 curl -X PATCH -u demo@local:demo-ion -H "Content-Type:application/json" -d '{"string_text": "NEW Example", "string_miltilinetext": "NEW Example", "string_formattext": "NEW Example"}' https://dnt.iondv.com/rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b
-# Or it is equivalent
+# Или эквивалентно
 curl -X PUT -u demo@local:demo-ion -H "Content-Type:application/json" -d '{"string_text": "NEW Example", "string_miltilinetext": "NEW Example", "string_formattext": "NEW Example"}' https://dnt.iondv.com/rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b
 ```
 
 
-If the object exists, it returns the response code `200` and the object itself in json format, if the object does not find the code is `404`, if the processing fails, the code is `500`, if there is no correct rights - `403`.
+Если объект существует - возвращает код ответа `200` и сам объект в формате json, если объект не найден код `404`, при ошибке обработки код `500`, если нет прав `403`.
 
-Object example:
-
+Пример объекта.
 ```json
 {
     "_editor": "admin@local",
@@ -505,30 +472,25 @@ Object example:
 }
 ```
 
-##### Delete object: DELETE crud/:class@namespace/:id method
-
-Deleting an object is carried out by the `DELETE` method, while indicating the class code with a namespace and the value of the object key, 
-for example `rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b`.
+##### Удаление объекта: метод DELETE crud/:class@namespace/:id
+Удаление объекта осуществляется методом `DELETE`, при этом указывается код класса с нейспейсом и значение ключа объекта, 
+например `rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b`.
 
 ```bash
 curl -X DELETE -u demo@local:demo-ion https://dnt.iondv.com/rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b
 ```
 
-If successful, the service returns the response code `200`, in case the object was not found `404`.
+В случае успеха - сервис возвращает код ответа `200`, в случае если объект не найден `404`
 
 
-### Service сreation
+### Создание сервиса
+Создание собственного сервиса состоит из следующих действий:
+* регистрация сервиса в deploy.json
+* создание обработчика сервисв а приложении
+* реализация логики обработки запросов
 
-Creating your own service consists of the following:
-
-* service registration in deploy.json
-* creating a service handler in the application
-* implementation of request processing logic
-
-#### Service registration in deploy.json application
-
-Test service registration example, for details see [Service registration in application configuration](#регистрация-сервиса-в-конфигурации-приложения)
-
+#### Регистрация сервиса в deploy.json приложения
+Пример регистрации тестового сервиса, подробнее см. [Регистрация сервиса в конфигурации приложения](#регистрация-сервиса-в-конфигурации-приложения)
 ```json
 {
   "modules": { 
@@ -544,21 +506,37 @@ Test service registration example, for details see [Service registration in appl
           }        
 ```
 
-#### Development of the service handler in the app
+#### Разработка обработчика сервиса в приложении
+Все сервисы реализуются как наследники от Service - функции модуля rest.
 
-All services are implemented as heirs from Service - functions of the rest module.
-
-Each service must export a handler function in which an asynchronous method `this._route` are implemented. It is necessary to register processed methods and paths, throuth the `this.addHandler` functions, returning the Promise . Handler function
-will have access to `options` and the access to the data repositories, authorization, metadata and classes (if they are specified in the application configuration in the deploy.json file) and will also receive an object with the generic name `req` - which is the `request` object of the [express](https://expressjs.com/en/4x/api.html#req) library.
-
-The data, already parsed into the object will be located in `req.body`.
+Какждый сервис должен экспортировать функцию обработчика, в которой реализован асинхронный метод `this._route`, в котором 
+ необходимо зарегистрировать обрабатываемые методы и пути, через функции `this.addHandler` возвращающее Promise . Функция обработки
+ будет иметь доступ к `options`, через который доступ к репозиториям данных, авторизации, метаданным и классам (если они 
+ указаны в конфигурации приложения в файле deploy.json), а также получит объект с типовым названием `req` - являющимся 
+ объектом `request` библиотеки [express](https://expressjs.com/en/4x/api.html#req).
+ Уже распарсенные в объект данные будет находится в `req.body`.
  
-The handler function must return a Promise resolving to the result of the handler (for processing in Service `modules/rest/lib/interfaces/Service.js`), the handler will issue it with a code of 200 and a content type - `Content-Type:application/json`. 
-If during processing there will be an error intercepted by catch, then for errors related to access control, an answer with an error text and code will be returned `403`, and for everything else, the response code `500` and error message `Internal server error`. 
+Функция обработчик должна вернуть Promise разрешающееся в результат выполнения обработчика (для обработки в Service `modules/rest/lib/interfaces/Service.js`), 
+ обработчик выдаст его с кодом 200 и типом содержания `Content-Type:application/json`. 
+ Если в ходе обработки будет ошибка перехваченная catch то для
+  ошибок связанных с контролем доступа будет возвращен ответ с тектом ошибки и с кодом `403`, а для всех остальных код ответа `500` 
+  и сообщением об ошибке `Internal server error`. 
+  
+Заголовок можно переопределить, для этого в ответе нужно отдать тип заголовка `headers`, а объект в атрибуте `data`
+```javascript
+Promise.resolve({headers: ['Content-Type: image/png', 'Content-Length: 107'],
+  data: Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49,
+          0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00,
+          0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00, 0x06, 0x62, 0x4B, 0x47, 0x44, 0x00, 0xFF, 0x00, 0xFF,
+          0x00, 0xFF, 0xA0, 0xBD, 0xA7, 0x93, 0x00, 0x00, 0x00, 0x09, 0x70, 0x48, 0x59, 0x73, 0x00, 0x00,
+          0x2E, 0x23, 0x00, 0x00, 0x2E, 0x23, 0x01, 0x78, 0xA5, 0x3F, 0x76, 0x00, 0x00, 0x00, 0x0B, 0x49,
+          0x44, 0x41, 0x54, 0x08, 0xD7, 0x63, 0x60, 0x00, 0x02, 0x00, 0x00, 0x05, 0x00, 0x01, 0xE2, 0x26,
+          0x05, 0x9B, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82])
+})
+```
  
-An example of implementing a service issuing lists of objects with filters for a `class_string` class in the [develop-and-test] application.
-
-It is also convenient to study the crud method itself, located at `modules/rest/lib/impl/crud.js`
+Пример реализации сервиса выдающего списки объектов с фильтрами для класса `class_string` в приложении [develop-and-test].
+Также для изучения удобно смотреть сам метод crud, находящийся по адресу `modules/rest/lib/impl/crud.js`
 
 ```javascript
 const Service = require('modules/rest/lib/interfaces/Service');
@@ -615,14 +593,12 @@ listClassString.prototype = new Service();
 module.exports = listClassString;
 ```
 
-Query without attributes in the query body:
-
+Запрос без атрибутов в теле запроса 
 ```bash
 curl -X POST -u demo@local:ion-demo https://dnt.iondv.com:8888/rest/string-list
 ```
 
-Returns all the list:
-
+Вернет весь список
 ```json
 [{"__class":"class_string@develop-and-test",
   "__classTitle":"Class \"String [0]\"",
@@ -644,8 +620,7 @@ Returns all the list:
   "string_formattext":"Example of the \r\n \"String [0]\" type \r\n in the \r\nFormatted text [7] view"}]
 ```
 
-A query with an attribute parameter equal to the value in the attribute string_text:
-
+А запрос с параметром атрибута равного значению в атрибуте string_text 
 `Example of the \"String [0]\" type in the \"Text [1]\" view`
 
 ```bash
@@ -653,8 +628,7 @@ curl -X POST -d "string_text=Example of the \"String [0]\" type in the \"Text [1
      -u demo@local:ion-demo https://dnt.iondv.com:8888/rest/string-list
 ```
 
-Returns the objects objects satisfying the condition:
-
+Вернет объекты удовлетворяющие условию
 ```json
 [{"__class":"class_string@develop-and-test",
   "__classTitle":"Class \"String [0]\"",
@@ -663,15 +637,16 @@ Returns the objects objects satisfying the condition:
   "string_miltilinetext":"Example of the \"String [0]\"\r\n in the Multiline text [7] view",
   "string_formattext":"Example of the \r\n \"String [0]\" type \r\n in the \r\nFormatted text [7] view"}]
 ```
-### Additional services
 
-* [The SEARCH method](/docs/en/method_search.md)
-* [Sending requests with files in the CRUD service](/docs/en/methods_crud.md)
-* [Work-flow execution service](/docs/en/performance_workflow.md)
-* [Metadata publishing service](/docs/en/service_metadata.md)
+### Дополнительные сервисы
+
+* [Метод SEARCH](/docs/ru/method_search.md)
+* [Отправка запросов с файлами в CRUD сервисе](/docs/ru/methods_crud.md)
+* [Сервис исполнения бизнес-процесса](/docs/ru/performance_workflow.md)
+* [Cервис публикации метаданных](/docs/ru/service_metadata.md)
 --------------------------------------------------------------------------  
 
- #### [Licence](/LICENSE) &ensp;  [Contact us](https://iondv.com) &ensp;         
+ #### [Licence](/LICENSE) &ensp;  [Contact us](https://iondv.com/portal/contacts) &ensp;  [Russian](/docs/ru/readme.md)         
 
 --------------------------------------------------------------------------  
 
