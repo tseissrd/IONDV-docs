@@ -131,6 +131,10 @@ latex_elements = {
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
+    # Additional stuff for the LaTeX preamble.
+    'preamble': "".join((
+        '\usepackage[russian]{babel}'
+    )),
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
