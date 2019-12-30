@@ -185,9 +185,3 @@ epub_exclude_files = ['search.html']
 locale_dirs = ['./locales/']
 
 # -- Extension configuration -------------------------------------------------
-root_for_relative_js_paths = '../dnt-gitlab/modules/rest'
-js_source_path = [
-    '../dnt-gitlab/modules/rest/lib/impl',
-    '../dnt-gitlab/modules/rest/lib/interfaces',
-    '../dnt-gitlab/modules/rest/backend'
-]
