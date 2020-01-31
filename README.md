@@ -74,7 +74,7 @@ deploy.json приложения. Пример приведен ниже.
 в данном случае класс `class_string@develop-and-test` будет передан в метод `getList` репозитория данных
 ```javascript
 options.dataRepo.getList(options.stringClassName, {})
-````
+```
 
 ### Аунтентификация при запросах к сервисам
 Авторизация может осуществляться следующими способами.
@@ -85,6 +85,8 @@ options.dataRepo.getList(options.stringClassName, {})
 ```bash
 curl -u demo@local:ion-demo https://dnt.iondv.com/rest/simple
 ```
+также в develop-and-test (dnt): [test/modules/rest/echopwd.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/echopwd.spec.js)  
+`/Checking echo-pwd service/# Requesting echo-pwd GET/check if the request can be made using the basicAuth`
 * путем передачи учетных данных в заголовках запроса
 ```bash
 curl -H "auth-user: demo" -H "auth-pwd: ion-demo" -H "auth-user-type: local" https://dnt.iondv.com/rest/simple
@@ -95,6 +97,8 @@ curl -H "auth-user: demo" -H "auth-pwd: ion-demo" -H "auth-user-type: local" htt
 ```bash
 curl -H "auth-user: demo@local" -H "auth-pwd: ion-demo" https://dnt.iondv.com/rest/simple
 ```
+dnt: [test/modules/rest/echopwd.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/echopwd.spec.js)  
+`/Checking echo-pwd service/# Requesting echo-pwd GET/check if the request can be made using the headers auth`
 
 
 #### Сервисы без аутентификации
@@ -109,7 +113,60 @@ curl -H "auth-user: demo@local" -H "auth-pwd: ion-demo" https://dnt.iondv.com/re
           "echo": "none"
 ```
 
-Запрос к сервису не будет требовать аутентификации, пример запроса `curl https://dnt.iondv.com/rest/echoo`
+Запрос к сервису не будет требовать аутентификации, пример запроса `curl https://dnt.iondv.com/rest/echoo`  
+dnt: [test/modules/rest/echo.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/echo.spec.js)   
+`/Checking echo-pwd service/# Requesting echo-pwd GET/check if the request can be made using the headers auth`
+
+#### Сервисы с аутентификацией методом OAuth2
+Для реализации работы сервиса с аутентификацией oauth2, необходимо предварительно подключить в deploy.json плагин вида
+```json
+"oauth": {
+        "module": "lib/oAuthAdapter",
+        "options": {
+          "auth": "ion://auth",
+          "dataSource": "ion://Db"
+        }
+      }
+```
+
+затем можно задать для сервиса значение `oauth` в настройке `auth_mode`:
+```json
+{
+  "modules": {
+    "rest": {
+      "globals": {
+        "authMode": {
+          "echo-oauth": "oauth"
+```
+
+спецификация oauth2 доступна по ссылке: https://oauth2-server.readthedocs.io/en/latest/index.html
+
+Этот тип авторизации используется для предоставления третьей стороне ограниченного доступа к ресурсам пользователя без необходимости предоставлять логин и пароль.
+Запросы для получения доступа производятся в следующем порядке:  
+1. Со стороны пользователя получаем cookie с id сессии:
+```bash
+curl -X POST --cookie-jar 1.txt -d username="demo@local" -d password="ion-demo" http://dnt.iondv.com/auth
+```
+
+2. Используя авторизованную сессию разрешаем клиенту ext@system запросы от нашего имени:
+```bash
+curl -X POST --cookie ./1.txt "http://dnt.iondv.com/oauth2/grant?client_id=ext@system&response_type=code&state=123"
+```
+В ответе будет содержаться параметр code.
+
+3. Теперь используя code можно получить токен:
+```bash
+curl -X POST -d grant_type="authorization_code" -d code="<code>" -H "Authorization:Basic ZXh0QHN5c3RlbTppb24tZGVtbw==" http://dnt.iondv.com/oauth2/token
+```
+в заголовке Authorization нужно ввести Basic <client_secret> код клиента.
+В ответе будет получен access_token.
+
+4. Для запросов от лица пользователя в сервисах с авторизацией oauth2 теперь можно авторизоваться используя access_token:
+```bash
+curl -X POST -H "Authorization:Bearer <access_token>" http://dnt.iondv.com/rest/echo-oauth
+```
+dnt: [test/modules/rest/echooauth.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/echooauth.spec.js)   
+`/Checking echo-oauth service`
 
 #### Сервисы с аутентификацией через токен
 Аутентификация по токену используется для исключения постоянной передачи учетной записи в запросах.
@@ -129,6 +186,8 @@ curl -H "auth-user: demo@local" -H "auth-pwd: ion-demo" https://dnt.iondv.com/re
 ```bash
 curl -H "auth-token: c369a361db9742e9a9ae8e9fe55950a571493812" http://dnt.iondv.com/rest/echo-token
 ```
+dnt: [test/modules/rest/token.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/token.spec.js)   
+`/Checking token service/# basicAuth authorization with admin rights/# check if the generated token is valid (basicAuth) (using echo-token)`
 
 Получение токена возможно двумя способами: в консоли модуля ionadmin или через сервис `token` модуля rest.
 
@@ -157,6 +216,9 @@ curl -u demo@local:ion-demo https://dnt.iondv.com/rest/token
 ```bash
 curl -H "auth-user: demo@local" -H "auth-pwd: ion-demo" -H https://dnt.iondv.com/rest/token
 ```
+dnt: [test/modules/rest/token.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/token.spec.js)   
+`/Checking token service/# basicAuth authorization with admin rights`  
+`/Checking token service/# authorization with admin rights using header parameters`
 
 В ответе сервиса будет токен вида `e444c69894d2087696e0a6c6914788f67ebcf6ee`. Время жизни токена по умолчанию 100 лет.
 
@@ -173,6 +235,44 @@ curl -H "auth-user: demo@local" -H "auth-pwd: ion-demo" -H https://dnt.iondv.com
 * В поле "Права доступа" роли выберите вкладку "Services"
 * Раскройте список прав для ресурса "Генерация токенов безопасности посредством веб-сервисов (ws:::gen-ws-token)"
 * Выбрать пункт "Использование" и нажмите кнопку "Сохранить"
+
+### Прокси-клиент для доступа к функциям модуля без получения нового токена
+Подключение клиента осуществляется в `modules.registry.globals.di` `deploy.json`:
+```json
+{
+  "modules": {
+    "registry": {
+      "globals": {
+        "di":{
+          "apiGateWay": {
+            "module": "modules/rest/client/GateWay",
+            "options": {
+              "log": "ion://sysLog",
+              "base": "/registry-ajax-api",
+              "clientId": "ext@system",
+              "clientSecret": "ion-demo",
+              "tokenPath": "/rest/token",
+              "endPoint": "[[rest.endPoint]]",
+              "definition": {
+                "paths": {
+                  "/rest/echo-token": {
+                    "post": true,
+                    "get": true
+                  }
+                }
+              }
+            }
+          }
+```
+
+Пример запроса к rest/echo-token через прокси-клиент:  
+```bash
+curl -X POST --cookie-jar 1.txt -d username="demo@local" -d password="ion-demo" http://localhost:8888/auth
+curl -X GET --cookie 1.txt https://dnt.iondv.com/registry-ajax-api/rest/echo-token
+```
+dnt: [test/modules/rest/gateway.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/gateway.spec.js)   
+`/Checking rest-api proxy`  
+
 
 ### Встроенные сервисы модуля
 
@@ -207,8 +307,8 @@ curl -H "auth-user: demo@local" -H "auth-pwd: ion-demo" -H https://dnt.iondv.com
 Сервис работает по методу `POST`, объекты передаются в виде массива объектов в формате JSON в теле запроса с обязательным 
 указанием в заголовке содержания json `Content-Type:application/json`. Автосоздаваемые поля указывать не обязательно. 
 
-В заголовке (header) в свойстве `ion-converter` может быть передано имя конвертора, который нужно использовать при обработке данных.
-Как данных запроса, так и данных ответа. При этом сам конвертор данных должные быть зарегистрирован в `options` сервиса.
+В заголовке (header) в свойстве `ion-converter` может быть передано имя конвертора, который нужно использовать при обработке данных, как запроса, так и ответа. 
+При этом сам конвертор данных должен быть зарегистрирован в `options` сервиса.
 Если обработчик не указан, используется обработчик по умолчанию.
 
 В данных объекта обязательно указываются:
@@ -225,6 +325,8 @@ curl -X POST -u demo@local:ion-demo \
        "string_text": "Example10", "string_miltilinetext": "Example10", "string_formattext": "Example10"}]' \
    https://dnt.iondv.com/rest/acceptor
 ```
+dnt: [test/modules/rest/acceptor.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/acceptor.spec.js)   
+`/Checking acceptor service/# basicAuth authorization with admin rights, POSTing strings/# result of creation of objects`  
 
 Метод возвращает код `200` и массив сохраненных объектов.
 ```json
@@ -267,11 +369,15 @@ curl -X POST -u demo@local:ion-demo \
 ```bash
 curl -u demo@local:ion-demo https://dnt.iondv.com/rest/token
 ```
+
  
 Пример запроса  с аутентификацией через параметры в заголовке 
 ```bash
 curl -H "auth-user: demo@local" -H "auth-pwd: ion-demo" -H "auth-user-type: local" https://dnt.iondv.com/rest/token
 ```
+dnt: [test/modules/rest/token.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/token.spec.js)   
+`/Checking token service/# basicAuth authorization with admin rights`  
+`/Checking token service/# authorization with admin rights using header parameters`
 
 #### Встроенный сервис "crud"
 Сервис `crud` реализует REST API по модели основных операций CRUD (create, read, update, delete).
@@ -302,6 +408,8 @@ curl -H "auth-user: demo@local" -H "auth-pwd: ion-demo" -H "auth-user-type: loca
 ```bash
 curl -X POST -u demo@local:ion-demo https://dnt.iondv.com/rest/crud
 ```
+dnt: [test/modules/rest/crud.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/crud.spec.js)   
+`/Checking crud service/# check if the response for null parameters is valid`  
 
 По умолчанию, без правильных параметров - код ответа сервера `404` об ошибке
 ```html
@@ -322,7 +430,9 @@ curl -X POST -u demo@local:ion-demo https://dnt.iondv.com/rest/crud
 ```bash
 curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@develop-and-test/
 ```
-В ответсервис выдает JSON Объект со смещением 0 и кол-вом 5ть записей и статусом `200`, если такого класса нет возвращает код `404`.
+dnt: [test/modules/rest/crud.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/crud.spec.js)  
+`/Checking crud service/GET/# getting a list of text objects`    
+В ответ сервис выдает JSON Объект со смещением 0 и кол-вом 5ть записей и статусом `200`, если такого класса нет возвращает код `404`.
 
 ```json
 [{"_creator":"admin@local",
@@ -360,6 +470,9 @@ curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@
 # Запрос списка объектов, у которы свойство string_text имеет значение example1, со смещением 1 и кол-вом 2
 curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@develop-and-test/?string_text=example1&_offset=1&_count=2
 ```
+dnt: [test/modules/rest/crud.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/crud.spec.js)  
+`/Checking crud service/GET/# getting a list of text objects, with an offset of 1 and a count of 2`  
+`/Checking crud service/GET/# getting a list of text objects containing a specific string`  
 
 ##### Проверка наличия объекта: метод HEAD crud/:class@namespace/:id
 Проверка наличия объекта осуществляется методом `HEAD`, при этом указывается код класса с нейспейсом и значение ключа объекта, 
@@ -368,6 +481,8 @@ curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@
 ```bash
 curl -X HEAD -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b
 ```
+dnt: [test/modules/rest/crud.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/crud.spec.js)  
+`/Checking crud service/HEAD/# checking if an object is present (HEAD)`
 
 Если объект существует - возвращает код ответа `200`, если объект не найден `404`, если нет прав `403`.
 
@@ -378,6 +493,8 @@ curl -X HEAD -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string
 ```bash
 curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b
 ```
+dnt: [test/modules/rest/crud.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/crud.spec.js)  
+`/Checking crud service/GET/# getting an object (GET)`
 
 При этом дополнительно в query может быть задан параметр `_eager` содержащий список свойств класса, разделенных символом `|` 
 для которых необходимо осуществить жадную загрузку данных (ссылки или коллекции). Например
@@ -385,6 +502,8 @@ curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@
 ```bash
 curl -X GET -u demo@local:ion-demo https://dnt.iondv.com/rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b?_eager=string_text
 ```
+dnt: [test/modules/rest/crud.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/crud.spec.js)  
+`/Checking crud service/GET/# getting an object with eager loading of the "table" property (GET)`
 
 Если объект существует - возвращает код ответа `200` и сам объект в формате json, если объект не найден `404`, если нет прав `403`.
 
@@ -412,6 +531,8 @@ curl -X POST -u demo@local:ion-demo \
    -d '{"string_text": "Example3", "string_miltilinetext": "Example3", "string_formattext": "Example3"}' \
    https://dnt.iondv.com/rest/crud/class_string@develop-and-test/
 ```
+dnt: [test/modules/rest/crud.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/crud.spec.js)  
+`/Checking crud service/POST/# creating an object (POST)`
 
 В ответ будет возвращён созданный объект, в котором будут заполнены все автосозданные поля и указан код ответа `200`.
 ```json
@@ -453,6 +574,8 @@ curl -X PATCH -u demo@local:demo-ion -H "Content-Type:application/json" -d '{"st
 # Или эквивалентно
 curl -X PUT -u demo@local:demo-ion -H "Content-Type:application/json" -d '{"string_text": "NEW Example", "string_miltilinetext": "NEW Example", "string_formattext": "NEW Example"}' https://dnt.iondv.com/rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b
 ```
+dnt: [test/modules/rest/crud.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/crud.spec.js)  
+`/Checking crud service/PATCH/# updating an object (PATCH)`
 
 
 Если объект существует - возвращает код ответа `200` и сам объект в формате json, если объект не найден код `404`, при ошибке обработки код `500`, если нет прав `403`.
@@ -479,6 +602,8 @@ curl -X PUT -u demo@local:demo-ion -H "Content-Type:application/json" -d '{"stri
 ```bash
 curl -X DELETE -u demo@local:demo-ion https://dnt.iondv.com/rest/crud/class_string@develop-and-test/66dbb3d0-5583-11e6-aef7-cf50314f026b
 ```
+dnt: [test/modules/rest/crud.spec.js](https://github.com/iondv/develop-and-test/test/modules/rest/crud.spec.js)  
+`/Checking crud service/DELETE/# deleting an object (DELETE)`
 
 В случае успеха - сервис возвращает код ответа `200`, в случае если объект не найден `404`
 
@@ -646,7 +771,7 @@ curl -X POST -d "string_text=Example of the \"String [0]\" type in the \"Text [1
 * [Cервис публикации метаданных](/docs/ru/service_metadata.md)
 --------------------------------------------------------------------------  
 
- #### [Licence](/LICENSE) &ensp;  [Contact us](https://iondv.com/portal/contacts) &ensp;  [Russian](/docs/ru/readme.md)         
+ #### [Licence](/LICENSE) &ensp;  [Contact us](https://iondv.com/portal/contacts) &ensp;         
 
 --------------------------------------------------------------------------  
 
